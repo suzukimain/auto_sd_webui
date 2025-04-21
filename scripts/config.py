@@ -40,7 +40,7 @@ def quickly_search_huggingface(search_word: str, **kwargs) -> str:
     )
 
     model_ids = [model.id for model in hf_models]
-    repo_id = model_ids[0] 
+    repo_id = model_ids[0] if model_ids else None
     return repo_id.split("/")[-1]
 
 
