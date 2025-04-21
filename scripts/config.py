@@ -40,7 +40,8 @@ def quickly_search_huggingface(search_word: str, **kwargs) -> str:
     )
 
     model_ids = [model.id for model in hf_models]
-    return model_ids[0] 
+    repo_id = model_ids[0] 
+    return repo_id.split("/")[-1]
 
 
 def quickly_search_civitai(search_word: str, **kwargs) -> str:
