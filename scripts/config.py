@@ -2,7 +2,7 @@ import requests
 
 from huggingface_hub import hf_api
 
-def quickly_search_huggingface(search_word: str, **kwargs):
+def quickly_search_huggingface(search_word: str, **kwargs) -> str:
     r"""
     huggingface search engine with emphasis on speed
 
