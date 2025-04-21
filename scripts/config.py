@@ -39,9 +39,8 @@ def quickly_search_huggingface(search_word: str, **kwargs) -> str:
         token=token,
     )
 
-    model_ids = [model.id for model in hf_models]
-    repo_id = model_ids[0] if model_ids else None
-    return repo_id.split("/")[-1]
+    repo_id = [model.id for model in hf_models]
+    return repo_id[0].split("/")[-1] if repo_id else None
 
 
 def quickly_search_civitai(search_word: str, **kwargs) -> str:
