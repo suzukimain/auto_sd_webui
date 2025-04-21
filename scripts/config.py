@@ -99,4 +99,4 @@ def quickly_search_civitai(search_word: str, **kwargs) -> str:
         except AttributeError:
             raise ValueError("Invalid JSON response")
     
-    return data[0]["name"]
+    return data["items"][0]["name"]
