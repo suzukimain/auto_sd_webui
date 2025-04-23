@@ -1,8 +1,9 @@
 import requests
+from typing import Union
 
 from huggingface_hub import hf_api
 
-def quickly_search_huggingface(search_word: str, **kwargs) -> str:
+def quickly_search_huggingface(search_word: str, **kwargs) -> Union[str, None]:
     r"""
     huggingface search engine with emphasis on speed
 
@@ -39,11 +40,13 @@ def quickly_search_huggingface(search_word: str, **kwargs) -> str:
         token=token,
     )
 
-    repo_id = [model.id for model in hf_models]
-    return repo_id[0].split("/")[-1] if repo_id else None
+    if hf_models:
+        repo_id = [model.id for model in hf_models]
+        return repo_id[0].split("/")[-1]
+    return None
 
 
-def quickly_search_civitai(search_word: str, **kwargs) -> str:
+def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
     r"""
     civitai search engine with emphasis on speed
 
@@ -91,12 +94,8 @@ def quickly_search_civitai(search_word: str, **kwargs) -> str:
         # Make the request to the CivitAI API
         response = requests.get("https://civitai.com/api/v1/models", params=params, headers=headers)
         response.raise_for_status()
-    except requests.exceptions.HTTPError as err:
-        raise requests.HTTPError(f"Could not get elements from the URL: {err}")
+        data = response.json()
+    except:
+        return None
     else:
-        try:
-            data = response.json()
-        except AttributeError:
-            raise ValueError("Invalid JSON response")
-    
-    return data["items"][0]["name"]
+        return data["items"][0]["name"]
