@@ -1,5 +1,5 @@
 import requests
-from typing import Optional, Union, List, Dict, Any
+from typing import Union
 
 from huggingface_hub import hf_api
 
