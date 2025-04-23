@@ -92,12 +92,8 @@ def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
         # Make the request to the CivitAI API
         response = requests.get("https://civitai.com/api/v1/models", params=params, headers=headers)
         response.raise_for_status()
-    except requests.exceptions.HTTPError as err:
-        raise requests.HTTPError(f"Could not get elements from the URL: {err}")
+        data = response.json()
+    except:
+        return None
     else:
-        try:
-            data = response.json()
-        except:
-            return None
-        else:
-            return data["items"][0]["name"]
+        return data["items"][0]["name"]
