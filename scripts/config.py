@@ -1,8 +1,9 @@
 import requests
+from typing import Optional, Union, List, Dict, Any
 
 from huggingface_hub import hf_api
 
-def quickly_search_huggingface(search_word: str, **kwargs) -> str:
+def quickly_search_huggingface(search_word: str, **kwargs) -> Union[str, None]:
     r"""
     huggingface search engine with emphasis on speed
 
@@ -43,7 +44,7 @@ def quickly_search_huggingface(search_word: str, **kwargs) -> str:
     return repo_id[0].split("/")[-1] if repo_id else None
 
 
-def quickly_search_civitai(search_word: str, **kwargs) -> str:
+def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
     r"""
     civitai search engine with emphasis on speed
 
@@ -96,7 +97,7 @@ def quickly_search_civitai(search_word: str, **kwargs) -> str:
     else:
         try:
             data = response.json()
-        except AttributeError:
-            raise ValueError("Invalid JSON response")
-    
-    return data["items"][0]["name"]
+        except:
+            return None
+        else:
+            return data["items"][0]["name"]
