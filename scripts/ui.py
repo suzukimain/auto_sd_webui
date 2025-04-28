@@ -108,14 +108,26 @@ def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
         return data["items"][0]["name"]
 
 
-def ui_checkpoint():
+def update_suggestion(user_input):
+    suggestion = quickly_search_civitai(user_input)
+
+    return f'<span style="opacity: 0.5;">{suggestion}</span>' if suggestion else ""
+
+
+def apply_suggestion(user_input, suggestion):
+    if suggestion:
+        clean_suggestion = suggestion.replace('<span style="opacity: 0.5;">', '').replace('</span>', '')
+        return clean_suggestion
+    return user_input
+
+
+def create_ui():
     with gr.Blocks() as demo:
         with gr.Row():
-            textbox = gr.Textbox(label="search box", placeholder="please input your search word")
-            suggestion = gr.HTML(label="candidate")
-    
-        textbox.change(fn=quickly_search_civitai, inputs=textbox, outputs=suggestion)
-    
+            textbox = gr.Textbox(label="Search box", placeholder="please input your search word")
+            suggestion = gr.HTML(label="assist")
+        textbox.change(fn=update_suggestion, inputs=[textbox], outputs=[suggestion])
+        textbox.submit(fn=apply_suggestion, inputs=[textbox, suggestion], outputs=[textbox])
     return demo
 
 
@@ -125,10 +137,7 @@ def on_ui_tabs():
             for tab in tabs_list:
                 with gr.Tab(tab):
                     with gr.Blocks(analytics_enabled=False) :
-                        if not tab == "checkpoint":
-                            search_button = gr.Button(f"Search {tab}")
-                        else:
-                            search_button = ui_checkpoint()
+                        search_botton = create_ui()
 
     return (search_ui , "Search", "auto_sd_webui"),
 
