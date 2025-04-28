@@ -1,7 +1,7 @@
 import gradio as gr
 
 
-from config import quickly_search_civitai
+from .config import quickly_search_civitai
 from modules import script_callbacks
 
 
