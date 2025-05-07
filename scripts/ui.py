@@ -14,6 +14,6 @@ def on_ui_tabs():
                     with gr.Blocks(analytics_enabled=False) :
                         search_button = gr.Button(f"Search {tab}")
         
-    return (search_ui , "Search", "auto_sd_webui"),
+    return (search_ui , "Search", "auto_sd_webui")
 
 script_callbacks.on_ui_tabs(on_ui_tabs)
