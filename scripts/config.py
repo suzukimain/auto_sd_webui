@@ -143,4 +143,4 @@ def on_ui_tabs():
 
     return (search_ui, "Search", "auto_sd_webui")
 
-script_callbacks.on_ui_tabs(Suggest().on_ui_tabs)
+script_callbacks.on_ui_tabs(on_ui_tabs)
