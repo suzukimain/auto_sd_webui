@@ -1,6 +1,5 @@
 import os
 import requests
-import importlib
 from typing import Union
 
 import gradio as gr
