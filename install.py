@@ -14,3 +14,5 @@ def install_dependencies(deps):
         subprocess.run([sys.executable, "-m", "pip", "install", package])
 
 install_dependencies(deps)
+
+from auto_diffusers import search_civitai,search_huggingface
