@@ -5,7 +5,7 @@ from typing import Union
 import gradio as gr
 
 from huggingface_hub import hf_api
-from auto_diffusers import (
+from auto_diffusers.pipeline_easy import (
     search_civitai,
     search_huggingface,
 )
