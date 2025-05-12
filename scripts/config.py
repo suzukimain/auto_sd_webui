@@ -1,11 +1,22 @@
+import os
 import requests
 from typing import Union
 
-from huggingface_hub import hf_api
+import gradio as gr
 
+from huggingface_hub import hf_api
+from auto_diffusers import (
+    search_civitai,
+    search_huggingface,
+)
+
+from modules import scripts, script_callbacks
+current_extension_directory = scripts.basedir()
+
+tabs_list = ["checkpoint"] # "textual inversion", "Lora", "controlnet"
 
 class Suggest:
-    def quickly_search_huggingface(search_word: str, **kwargs) -> Union[str, None]:
+    def quickly_search_huggingface(self, search_word: str, **kwargs) -> Union[str, None]:
         r"""
         huggingface search engine with emphasis on speed
 
@@ -48,7 +59,7 @@ class Suggest:
         return None
 
 
-    def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
+    def quickly_search_civitai(self, search_word: str, **kwargs) -> Union[str, None]:
         r"""
         civitai search engine with emphasis on speed
 
@@ -101,3 +112,34 @@ class Suggest:
             return None
         else:
             return data["items"][0]["name"]
+        
+    def download_model(self, model_name: str, **kwargs):
+        save_path = os.path.join(scripts.basedir(), "models", model_name)
+        model_path = search_civitai(
+            model_name,
+            include_params=True,
+            **kwargs,
+        )
+
+    def create_ui(self):
+        with gr.Blocks() as demo:
+            with gr.Row():
+                textbox = gr.Textbox(label="Search box", placeholder="please input your search word")
+                suggestion = gr.HTML(label="assist")
+            textbox.change(fn=self.quick_search_civitai, inputs=[textbox], outputs=[suggestion])
+            #textbox.submit(fn=apply_suggestion, inputs=[textbox, suggestion], outputs=[textbox])
+            search_button = gr.Button("Search")
+            search_button.click(fn=self.download_model, inputs=[textbox], outputs="text")
+        return demo
+
+    def on_ui_tabs(self):
+        with gr.Blocks(analytics_enabled=False) as search_ui:
+            with gr.Tabs(elem_id="search_tab"):
+                for tab in tabs_list:
+                    with gr.Tab(tab):
+                        with gr.Blocks(analytics_enabled=False):
+                            search_ui_content = self.create_ui()
+
+        return (search_ui, "Search", "auto_sd_webui")
+
+script_callbacks.on_ui_tabs(on_ui_tabs)
