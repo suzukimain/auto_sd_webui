@@ -4,7 +4,7 @@ import re
 
 _deps = [
     "auto_diffusers>=2.0.22",
-    "transformers>=4.51.0",
+    "transformers<=4.32.1",
 ]
 
 deps = {b: a for a, b in (re.findall(r"^(([^!=<>~]+)(?:[!=<>~].*)?$)", x)[0] for x in _deps)}
