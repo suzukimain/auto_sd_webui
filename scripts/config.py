@@ -114,9 +114,11 @@ class Suggest:
             return data["items"][0]["name"]
         
     def download_model(self, model_name: str, **kwargs):
-        save_path = os.path.join(scripts.basedir(), "models", model_name)
+        save_path = os.path.join(scripts.basedir(), "webui/models/Stable-diffusion")
         model_path = search_civitai(
             model_name,
+            model_type="Checkpoint",
+            cache_dir=save_path,
             include_params=True,
             **kwargs,
         )
@@ -142,4 +144,4 @@ class Suggest:
 
         return (search_ui, "Search", "auto_sd_webui")
 
-script_callbacks.on_ui_tabs(on_ui_tabs)
+script_callbacks.on_ui_tabs(Suggest().on_ui_tabs)
