@@ -14,6 +14,9 @@ current_extension_directory = scripts.basedir()
 
 tabs_list = ["checkpoint"] # "textual inversion", "Lora", "controlnet"
 
+
+VALID_URL_PREFIXES = ["https://huggingface.co/", "huggingface.co/", "hf.co/", "https://hf.co/"]
+
 @dataclass
 class RepoStatus:
     r"""
