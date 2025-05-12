@@ -112,6 +112,7 @@ def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
     else:
         return data["items"][0]["name"]
     
+
 def download_model(model_name: str, **kwargs):
     save_path = os.path.join(scripts.basedir(), "webui/models/Stable-diffusion")
     model_path = search_civitai(
@@ -121,6 +122,7 @@ def download_model(model_name: str, **kwargs):
         include_params=True,
         **kwargs,
     )
+    return f"download model: {model_path}"
 
 def create_ui():
     with gr.Blocks() as demo:
@@ -128,9 +130,11 @@ def create_ui():
             textbox = gr.Textbox(label="Search box", placeholder="please input your search word")
             suggestion = gr.HTML(label="assist")
         textbox.change(fn=quickly_search_civitai, inputs=[textbox], outputs=[suggestion])
-        #textbox.submit(fn=apply_suggestion, inputs=[textbox, suggestion], outputs=[textbox])
+
         search_button = gr.Button("Search")
-        search_button.click(fn=download_model, inputs=[textbox], outputs="text")
+        search_output = gr.Textbox(label="Result", interactive=False)
+        search_button.click(fn=download_model, inputs=[textbox], outputs=[search_output])
+
     return demo
 
 def on_ui_tabs():
