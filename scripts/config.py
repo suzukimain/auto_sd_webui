@@ -1,14 +1,12 @@
 import os
 import requests
+import importlib
 from typing import Union
 
 import gradio as gr
 
 from huggingface_hub import hf_api
-from auto_diffusers import (
-    search_civitai,
-    search_huggingface,
-)
+
 
 from modules import scripts, script_callbacks
 current_extension_directory = scripts.basedir()
@@ -115,6 +113,9 @@ def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
 
 def download_model(model_name: str, **kwargs):
     save_path = os.path.join(scripts.basedir(), "webui/models/Stable-diffusion")
+    auto_diffusers = importlib.import_module("auto_diffusers")
+    search_civitai = getattr(auto_diffusers, "search_civitai")
+
     model_path = search_civitai(
         model_name,
         model_type="Checkpoint",
