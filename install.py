@@ -15,4 +15,4 @@ def install_dependencies(deps):
 
 install_dependencies(deps)
 
-from auto_diffusers import search_civitai,search_huggingface
+from auto_diffusers.pipeline_easy import search_civitai,search_huggingface
