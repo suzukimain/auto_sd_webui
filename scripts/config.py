@@ -8,6 +8,10 @@ import gradio as gr
 
 from huggingface_hub import hf_api
 
+from diffusers.loaders.single_file_utils import (
+    VALID_URL_PREFIXES,
+    _extract_repo_id_and_weights_name,
+)
 from diffusers import DiffusionPipeline
 from diffusers.utils import logging
 from huggingface_hub import hf_api, hf_hub_download
@@ -129,135 +133,6 @@ class SearchResult:
     extra_status: ExtraStatus = field(default_factory=ExtraStatus)
 
 
-def quickly_search_huggingface(search_word: str, **kwargs) -> Union[str, None]:
-    r"""
-    huggingface search engine with emphasis on speed
-
-    Parameters:
-        search_word (`str`):
-            The search query string.
-        pipeline_tag (`str`, *optional*):
-            Tag to filter models by pipeline.
-        limit (`int`, *optional*, defaults to `100`):
-            The number of candidates to retrieve.
-        token (`str`, *optional*):
-            API token for Hugging Face authentication.
-        gated (`bool`, *optional*, defaults to `False` ):
-            A boolean to filter models on the Hub that are gated or not.
-
-    Returns:
-        `str`: The name of the model.
-    """
-    # Extract additional parameters from kwargs
-    pipeline_tag = kwargs.pop("pipeline_tag", None)
-    limit = kwargs.pop("limit", 1)
-    token = kwargs.pop("token", None)
-    gated = kwargs.pop("gated", False)
-
-    # Get model data from HF API
-    hf_models = hf_api.list_models(
-        search=search_word,
-        direction=-1,
-        limit=limit,
-        pipeline_tag=pipeline_tag,
-        fetch_config=False,
-        full=False, 
-        gated=gated,
-        token=token,
-    )
-
-    if hf_models:
-        repo_id = [model.id for model in hf_models]
-        return repo_id[0].split("/")[-1]
-    return None
-
-
-def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
-    r"""
-    civitai search engine with emphasis on speed
-
-    Parameters:
-        search_word (`str`):
-            The search query string.
-        model_type (`str`, *optional*, defaults to `Checkpoint`):
-            The type of model to search for.
-        sort (`str`, *optional*):
-            The order in which you wish to sort the results(for example, `Highest Rated`, `Most Downloaded`, `Newest`).
-        base_model (`str`, *optional*):
-            The base model to filter by.
-        token (`str`, *optional*):
-            API token for Civitai authentication.
-
-    Returns:
-        `str`: The name of the model.
-    """
-
-    # Extract additional parameters from kwargs
-    model_type = kwargs.pop("model_type", "Checkpoint")
-    sort = kwargs.pop("sort", None)
-    base_model = kwargs.pop("base_model", None)
-    token = kwargs.pop("token", None)
-
-    # Set up parameters and headers for the CivitAI API request
-    params = {
-        "query": search_word,
-        "types": model_type,
-        "limit": 1,
-    }
-    if base_model is not None:
-        if not isinstance(base_model, list):
-            base_model = [base_model]
-        params["baseModel"] = base_model
-
-    if sort is not None:
-        params["sort"] = sort
-
-    headers = {}
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-
-    try:
-        # Make the request to the CivitAI API
-        response = requests.get("https://civitai.com/api/v1/models", params=params, headers=headers)
-        response.raise_for_status()
-        data = response.json()
-    except:
-        return None
-    else:
-        return data["items"][0]["name"]
-    
-
-
-
-
-
-# Copied diffusers/loaders/single_file_utils.py
-def is_valid_url(url):
-    result = urlparse(url)
-    if result.scheme and result.netloc:
-        return True
-
-    return False
-
-# Based on diffusers/loaders/single_file_utils.py
-def _extract_repo_id_and_weights_name(pretrained_model_name_or_path):
-    if not is_valid_url(pretrained_model_name_or_path):
-        raise ValueError("Invalid `pretrained_model_name_or_path` provided. Please set it to a valid URL.")
-
-    pattern = r"([^/]+)/([^/]+)/(?:blob/main/)?(.+)"
-    weights_name = None
-    repo_id = (None,)
-    for prefix in ["https://huggingface.co/", "huggingface.co/", "hf.co/", "https://hf.co/"]:
-        pretrained_model_name_or_path = pretrained_model_name_or_path.replace(prefix, "")
-    match = re.match(pattern, pretrained_model_name_or_path)
-    if not match:
-        logger.warning("Unable to identify the repo_id and weights_name from the provided URL.")
-        return repo_id, weights_name
-
-    repo_id = f"{match.group(1)}/{match.group(2)}"
-    weights_name = match.group(3)
-
-    return repo_id, weights_name
 
 def get_keyword_types(keyword):
     r"""
@@ -406,8 +281,110 @@ def file_downloader(
             **kwargs,
         )
 
-class BaseConfig:
-    def search_huggingface(search_word: str, **kwargs) -> Union[str, SearchResult, None]:
+class ModelSearch:
+    def __init__(self):
+        self.base_dir = scripts.basedir()
+        self.cache_dir = os.path.join(self.base_dir, "webui", "models", "Stable-diffusion")
+    
+    
+    def quickly_search_huggingface(self, search_word: str, **kwargs) -> Union[str, None]:
+        r"""
+        huggingface search engine with emphasis on speed
+
+        Parameters:
+            search_word (`str`):
+                The search query string.
+            pipeline_tag (`str`, *optional*):
+                Tag to filter models by pipeline.
+            limit (`int`, *optional*, defaults to `100`):
+                The number of candidates to retrieve.
+            token (`str`, *optional*):
+                API token for Hugging Face authentication.
+            gated (`bool`, *optional*, defaults to `False` ):
+                A boolean to filter models on the Hub that are gated or not.
+
+        Returns:
+            `str`: The name of the model.
+        """
+        # Extract additional parameters from kwargs
+        pipeline_tag = kwargs.pop("pipeline_tag", None)
+        limit = kwargs.pop("limit", 1)
+        token = kwargs.pop("token", None)
+        gated = kwargs.pop("gated", False)
+
+        # Get model data from HF API
+        hf_models = hf_api.list_models(
+            search=search_word,
+            direction=-1,
+            limit=limit,
+            pipeline_tag=pipeline_tag,
+            fetch_config=False,
+            full=False, 
+            gated=gated,
+            token=token,
+        )
+
+        if hf_models:
+            repo_id = [model.id for model in hf_models]
+            return repo_id[0].split("/")[-1]
+        return None
+
+    def quickly_search_civitai(self, search_word: str, **kwargs) -> Union[str, None]:
+        r"""
+        civitai search engine with emphasis on speed
+
+        Parameters:
+            search_word (`str`):
+                The search query string.
+            model_type (`str`, *optional*, defaults to `Checkpoint`):
+                The type of model to search for.
+            sort (`str`, *optional*):
+                The order in which you wish to sort the results(for example, `Highest Rated`, `Most Downloaded`, `Newest`).
+            base_model (`str`, *optional*):
+                The base model to filter by.
+            token (`str`, *optional*):
+                API token for Civitai authentication.
+
+        Returns:
+            `str`: The name of the model.
+        """
+
+        # Extract additional parameters from kwargs
+        model_type = kwargs.pop("model_type", "Checkpoint")
+        sort = kwargs.pop("sort", None)
+        base_model = kwargs.pop("base_model", None)
+        token = kwargs.pop("token", None)
+
+        # Set up parameters and headers for the CivitAI API request
+        params = {
+            "query": search_word,
+            "types": model_type,
+            "limit": 1,
+        }
+        if base_model is not None:
+            if not isinstance(base_model, list):
+                base_model = [base_model]
+            params["baseModel"] = base_model
+
+        if sort is not None:
+            params["sort"] = sort
+
+        headers = {}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
+        try:
+            # Make the request to the CivitAI API
+            response = requests.get("https://civitai.com/api/v1/models", params=params, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+        except:
+            return None
+        else:
+            return data["items"][0]["name"]
+
+
+    def search_huggingface(self, search_word: str, **kwargs) -> Union[str, SearchResult, None]:
         r"""
         Downloads a model from Hugging Face.
 
@@ -443,6 +420,7 @@ class BaseConfig:
         force_download = kwargs.pop("force_download", False)
         include_params = kwargs.pop("include_params", False)
         pipeline_tag = kwargs.pop("pipeline_tag", None)
+        cache_dir = kwargs.pop("cache_dir", None)
         token = kwargs.pop("token", None)
         gated = kwargs.pop("gated", False)
         skip_error = kwargs.pop("skip_error", False)
@@ -463,8 +441,9 @@ class BaseConfig:
                 model_path = DiffusionPipeline.download(
                     search_word,
                     revision=revision,
-                    token=token,
+                    cache_dir=cache_dir,
                     force_download=force_download,
+                    token=token,
                     **kwargs,
                 )
             else:
@@ -475,6 +454,7 @@ class BaseConfig:
                 model_path = hf_hub_download(
                     repo_id=repo_id,
                     filename=weights_name,
+                    cache_dir=cache_dir,
                     force_download=force_download,
                     token=token,
                 )
@@ -548,6 +528,7 @@ class BaseConfig:
                 if download:
                     model_path = DiffusionPipeline.download(
                         repo_id,
+                        cache_dir=cache_dir,
                         token=token,
                         **kwargs,
                     )
@@ -570,8 +551,9 @@ class BaseConfig:
                         repo_id=repo_id,
                         filename=file_name,
                         revision=revision,
-                        token=token,
+                        cache_dir=cache_dir,
                         force_download=force_download,
+                        token=token,
                     )
 
         # `pathlib.PosixPath` may be returned
@@ -606,7 +588,7 @@ class BaseConfig:
         else:
             return model_path
 
-    def search_civitai(search_word: str, **kwargs) -> Union[str, SearchResult, None]:
+    def search_civitai(self, search_word: str, **kwargs) -> Union[str, SearchResult, None]:
         r"""
         Downloads a model from Civitai.
 
@@ -660,7 +642,7 @@ class BaseConfig:
         selected_repo = {}
         selected_model = {}
         selected_version = {}
-        civitai_cache_dir = cache_dir or os.path.join(CACHE_HOME, "Civitai")
+        civitai_cache_dir = cache_dir or os.path.join(self.cache_dir, "Civitai")
 
         # Set up parameters and headers for the CivitAI API request
         params = {
