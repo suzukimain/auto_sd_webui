@@ -133,6 +133,11 @@ class SearchResult:
     extra_status: ExtraStatus = field(default_factory=ExtraStatus)
 
 
+@dataclass
+class BaseConfig:
+    base_dir = field(default_factory=scripts.basedir())
+    cache_dir = field(default_factory=os.path.join(base_dir, "webui", "models", "Stable-diffusion"))
+
 
 def get_keyword_types(keyword):
     r"""
@@ -281,12 +286,7 @@ def file_downloader(
             **kwargs,
         )
 
-class ModelSearch:
-    def __init__(self):
-        self.base_dir = scripts.basedir()
-        self.cache_dir = os.path.join(self.base_dir, "webui", "models", "Stable-diffusion")
-    
-    
+class ModelSearch(BaseConfig):
     def quickly_search_huggingface(self, search_word: str, **kwargs) -> Union[str, None]:
         r"""
         huggingface search engine with emphasis on speed
@@ -793,35 +793,23 @@ class ModelSearch:
             )
 
 
-
-
-
-
-
-def download_model(model_name: str, **kwargs):
-    save_path = os.path.join(scripts.basedir(), "webui/models/Stable-diffusion")
-    auto_diffusers = importlib.import_module("auto_diffusers")
-    search_civitai = getattr(auto_diffusers, "search_civitai")
-
-    model_path = search_civitai(
-        model_name,
-        model_type="Checkpoint",
-        cache_dir=save_path,
-        include_params=True,
-        **kwargs,
-    )
-    return f"download model: {model_path}"
-
 def create_ui():
     with gr.Blocks() as demo:
         with gr.Row():
             textbox = gr.Textbox(label="Search box", placeholder="please input your search word")
             suggestion = gr.HTML(label="assist")
-        textbox.change(fn=quickly_search_civitai, inputs=[textbox], outputs=[suggestion])
+        textbox.change(fn=ModelSearch().quickly_search_civitai, inputs=[textbox], outputs=[suggestion])
 
         search_button = gr.Button("Search")
         search_output = gr.Textbox(label="Result", interactive=False)
-        search_button.click(fn=download_model, inputs=[textbox], outputs=[search_output])
+        config_state = gr.State({
+            "download":True,
+            "include_params":True,
+            "gated":False,
+            "skip_error":True,
+            "cache_dir":os.path.join(BaseConfig.cache_dir, "Civitai"),
+        })
+        search_button.click(fn=ModelSearch().search_civitai, inputs=[textbox, config_state], outputs=[search_output])
 
     return demo
 
