@@ -814,9 +814,9 @@ def create_ui():
 def on_ui_tabs():
     with gr.Blocks(analytics_enabled=False) as search_ui:
         with gr.Tabs(elem_id="search_tab"):
-                with gr.Tab("checkpoint"):
-                    with gr.Blocks(analytics_enabled=False):
-                        search_ui_content = create_ui()
+            for tab in tabs_list:
+                with gr.Tab(tab):
+                    create_ui()
 
     return (search_ui, "Search", "auto_sd_webui")
 
