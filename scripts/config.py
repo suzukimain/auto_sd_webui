@@ -135,9 +135,8 @@ class SearchResult:
 
 @dataclass
 class BaseConfig:
-    base_dir = field(default_factory=scripts.basedir())
-    cache_dir = field(default_factory=os.path.join(base_dir, "webui", "models", "Stable-diffusion"))
-
+    base_dir: str = field(default_factory=lambda: scripts.basedir())
+    cache_dir: str = field(default_factory=lambda: os.path.join(scripts.basedir(), "webui", "models", "Stable-diffusion"))
 
 def get_keyword_types(keyword):
     r"""
