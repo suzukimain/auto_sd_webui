@@ -1,6 +1,6 @@
 import os
 import requests
-from typing import Union
+from typing import Dict, List, Optional, Union
 from dataclasses import dataclass, field, asdict
 import re
 from urllib.parse import urlparse
@@ -8,14 +8,43 @@ import gradio as gr
 
 from huggingface_hub import hf_api
 
+from diffusers import DiffusionPipeline
+from diffusers.utils import logging
+from huggingface_hub import hf_api, hf_hub_download
+from huggingface_hub.file_download import http_get
 
 from modules import scripts, script_callbacks
-current_extension_directory = scripts.basedir()
+
+logger = logging.get_logger(__name__)
+
 
 tabs_list = ["checkpoint"] # "textual inversion", "Lora", "controlnet"
 
+EXTENSION = [".safetensors", ".ckpt", ".bin"]
 
 VALID_URL_PREFIXES = ["https://huggingface.co/", "huggingface.co/", "hf.co/", "https://hf.co/"]
+
+CONFIG_FILE_LIST = [
+    "pytorch_model.bin",
+    "pytorch_model.fp16.bin",
+    "diffusion_pytorch_model.bin",
+    "diffusion_pytorch_model.fp16.bin",
+    "diffusion_pytorch_model.safetensors",
+    "diffusion_pytorch_model.fp16.safetensors",
+    "diffusion_pytorch_model.ckpt",
+    "diffusion_pytorch_model.fp16.ckpt",
+    "diffusion_pytorch_model.non_ema.bin",
+    "diffusion_pytorch_model.non_ema.safetensors",
+]
+
+DIFFUSERS_CONFIG_DIR = [
+    "safety_checker",
+    "unet",
+    "vae",
+    "text_encoder",
+    "text_encoder_2",
+]
+
 
 @dataclass
 class RepoStatus:
