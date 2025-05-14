@@ -133,11 +133,6 @@ class SearchResult:
     extra_status: ExtraStatus = field(default_factory=ExtraStatus)
 
 
-@dataclass
-class BaseConfig:
-    base_dir: str = field(default_factory=lambda: scripts.basedir())
-    cache_dir: str = field(default_factory=lambda: os.path.join(scripts.basedir(), "webui", "models", "Stable-diffusion"))
-
 def get_keyword_types(keyword):
     r"""
     Determine the type and loading method for a given keyword.
@@ -285,7 +280,11 @@ def file_downloader(
             **kwargs,
         )
 
-class ModelSearch(BaseConfig):
+class ModelSearch:
+    def __init__(self):
+        self.base_dir: str = scripts.basedir()
+        self.cache_dir: str = os.path.join(self.base_dir, "webui", "models", "Stable-diffusion")
+
     def quickly_search_huggingface(self, search_word: str, **kwargs) -> Union[str, None]:
         r"""
         huggingface search engine with emphasis on speed
@@ -806,7 +805,7 @@ def create_ui():
             "include_params":True,
             "gated":False,
             "skip_error":True,
-            "cache_dir":os.path.join(BaseConfig.cache_dir, "Civitai"),
+            "cache_dir":os.path.join(ModelSearch.cache_dir, "Civitai"),
         })
         search_button.click(fn=ModelSearch().search_civitai, inputs=[textbox, config_state], outputs=[search_output])
 
