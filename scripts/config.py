@@ -805,7 +805,7 @@ def create_ui():
             "include_params":True,
             "gated":False,
             "skip_error":True,
-            "cache_dir":os.path.join(ModelSearch.cache_dir, "Civitai"),
+            "cache_dir":os.path.join(ModelSearch().cache_dir, "Civitai"),
         })
         search_button.click(fn=ModelSearch().search_civitai, inputs=[textbox, config_state], outputs=[search_output])
 
