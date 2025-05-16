@@ -2,6 +2,12 @@ import requests
 from typing import Union
 
 from huggingface_hub import hf_api
+import gradio as gr
+
+from modules import script_callbacks
+
+tabs_list = ["checkpoint", "textual inversion", "Lora", "controlnet"]
+
 
 def quickly_search_huggingface(search_word: str, **kwargs) -> Union[str, None]:
     r"""
@@ -99,3 +105,15 @@ def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
         return None
     else:
         return data["items"][0]["name"]
+
+def on_ui_tabs():
+    with gr.Blocks(analytics_enabled=False) as search_tab:
+        with gr.Tabs(elem_id="Search_tab"):
+            for tab in tabs_list:
+                with gr.Tab(tab):
+                    with gr.Blocks(analytics_enabled=False) :
+                        create_tab(tab)
+                         
+    return (search_tab , "Search", "Search_ui")
+
+script_callbacks.on_ui_tabs(on_ui_tabs)
