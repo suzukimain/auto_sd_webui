@@ -130,13 +130,13 @@ def create_tab(tab):
 
 def on_ui_tabs():
     with gr.Blocks(analytics_enabled=False) as search_tab:
-        with gr.Tabs(elem_id="images_history_tab") as tabs:
+        with gr.Tabs(elem_id="Search_tab"):
             for tab in tabs_list:
                 with gr.Tab(tab):
                     with gr.Blocks(analytics_enabled=False) :
                         create_tab(tab)
                          
-    return (search_tab , "Image Browser", "images_history"),
+    return (search_tab , "Search", "Search_ui")
 
 
 
