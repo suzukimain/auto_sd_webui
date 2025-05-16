@@ -106,6 +106,27 @@ def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
     else:
         return data["items"][0]["name"]
 
+def create_tab(tab):
+    with gr.Row():
+        with gr.Column():
+            search_word = gr.Textbox(label="Search", placeholder="Enter a keyword to search")
+            search_button = gr.Button("Search")
+            search_result = gr.Textbox(label="Result", interactive=False)
+            search_button.click(
+                lambda x: quickly_search_huggingface(x) if tab == "checkpoint" else quickly_search_civitai(x),
+                inputs=[search_word],
+                outputs=[search_result],
+            )
+        with gr.Column():
+            search_word2 = gr.Textbox(label="Search", placeholder="Enter a keyword to search")
+            search_button2 = gr.Button("Search")
+            search_result2 = gr.Textbox(label="Result", interactive=False)
+            search_button2.click(
+                lambda x: quickly_search_huggingface(x) if tab == "checkpoint" else quickly_search_civitai(x),
+                inputs=[search_word2],
+                outputs=[search_result2],
+            )
+
 def on_ui_tabs():
     with gr.Blocks(analytics_enabled=False) as search_tab:
         with gr.Tabs(elem_id="Search_tab"):
