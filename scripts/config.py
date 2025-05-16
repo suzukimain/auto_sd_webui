@@ -1,7 +1,14 @@
 import requests
 from typing import Union
 
+import gradio as gr
 from huggingface_hub import hf_api
+
+from modules import script_callbacks
+
+tabs_list = ["checkpoint", "textual inversion", "Lora", "controlnet"]
+
+
 
 def quickly_search_huggingface(search_word: str, **kwargs) -> Union[str, None]:
     r"""
@@ -99,3 +106,39 @@ def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
         return None
     else:
         return data["items"][0]["name"]
+
+def create_tab(tab):
+    with gr.Row():
+        with gr.Column():
+            search_word = gr.Textbox(label="Search", placeholder="Enter a keyword to search")
+            search_button = gr.Button("Search")
+            search_result = gr.Textbox(label="Result", interactive=False)
+            search_button.click(
+                lambda x: quickly_search_huggingface(x) if tab == "checkpoint" else quickly_search_civitai(x),
+                inputs=[search_word],
+                outputs=[search_result],
+            )
+        with gr.Column():
+            search_word2 = gr.Textbox(label="Search", placeholder="Enter a keyword to search")
+            search_button2 = gr.Button("Search")
+            search_result2 = gr.Textbox(label="Result", interactive=False)
+            search_button2.click(
+                lambda x: quickly_search_huggingface(x) if tab == "checkpoint" else quickly_search_civitai(x),
+                inputs=[search_word2],
+                outputs=[search_result2],
+            )
+
+def on_ui_tabs():
+    with gr.Blocks(analytics_enabled=False) as search_tab:
+        with gr.Tabs(elem_id="images_history_tab") as tabs:
+            for tab in tabs_list:
+                with gr.Tab(tab):
+                    with gr.Blocks(analytics_enabled=False) :
+                        create_tab(tab)
+                         
+    return (search_tab , "Image Browser", "images_history"),
+
+
+
+script_callbacks.on_ui_settings(on_ui_settings)
+script_callbacks.on_ui_tabs(on_ui_tabs)
