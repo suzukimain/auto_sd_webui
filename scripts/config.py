@@ -818,6 +818,6 @@ def on_ui_tabs():
                 with gr.Tab(tab):
                     create_ui()
 
-    return (search_ui, "Search", "auto_sd_webui")
+    return (search_ui, "Search", "auto_sd_webui"),
 
 script_callbacks.on_ui_tabs(on_ui_tabs)
