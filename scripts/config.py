@@ -1,13 +1,14 @@
 import requests
-from typing import Union
+from typing import Union, List
 
 from huggingface_hub import hf_api
 import gradio as gr
 
 from modules import script_callbacks
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 
 tabs_list = ["checkpoint", "textual inversion", "Lora", "controlnet"]
-
 
 def quickly_search_huggingface(search_word: str, **kwargs) -> Union[str, None]:
     r"""
@@ -51,8 +52,7 @@ def quickly_search_huggingface(search_word: str, **kwargs) -> Union[str, None]:
         return repo_id[0].split("/")[-1]
     return None
 
-
-def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
+def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None, List[str]]:
     r"""
     civitai search engine with emphasis on speed
 
@@ -69,7 +69,7 @@ def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
             API token for Civitai authentication.
 
     Returns:
-        `str`: The name of the model.
+        `str` or `List[str]`: The name(s) of the model(s).
     """
 
     # Extract additional parameters from kwargs
@@ -77,12 +77,13 @@ def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
     sort = kwargs.pop("sort", None)
     base_model = kwargs.pop("base_model", None)
     token = kwargs.pop("token", None)
+    limit = kwargs.pop("limit", 1)
     
     # Set up parameters and headers for the CivitAI API request
     params = {
         "query": search_word,
         "types": model_type,
-        "limit": 1,
+        "limit": limit,
     }
     if base_model is not None:
         if not isinstance(base_model, list):
@@ -101,10 +102,13 @@ def quickly_search_civitai(search_word: str, **kwargs) -> Union[str, None]:
         response = requests.get("https://civitai.com/api/v1/models", params=params, headers=headers)
         response.raise_for_status()
         data = response.json()
+        names = [item["name"] for item in data.get("items", [])]
+        if limit == 1:
+            return names[0] if names else None
+        else:
+            return names
     except:
-        return None
-    else:
-        return data["items"][0]["name"]
+        return None if limit == 1 else []
 
 def create_tab(tab):
     with gr.Row():
@@ -137,4 +141,15 @@ def on_ui_tabs():
                          
     return (search_tab , "Search", "Search_ui"),
 
+def on_app_started(app: FastAPI):
+    @app.get("/civitai_candidates")
+    async def civitai_candidates(q: str):
+        result = quickly_search_civitai(q, limit=5)
+        if isinstance(result, str):
+            result = [result]
+        elif result is None:
+            result = []
+        return JSONResponse(content=result)
+
 script_callbacks.on_ui_tabs(on_ui_tabs)
+script_callbacks.on_app_started(on_app_started)
