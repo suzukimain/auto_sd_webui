@@ -1,4 +1,5 @@
 (function() {
+    // CSSを動的に追加
     const style = document.createElement('style');
     style.innerHTML = `
     .civitai-autocomplete {
@@ -23,8 +24,17 @@
     }
     `;
     document.head.appendChild(style);
--
+
     function getTextbox() {
+        // 2タブなら2番目のtextareaまで出るので、適宜選択
+        // 例: civitaiタブのtextarea
+        let tabs = document.querySelectorAll('.tabitem');
+        for (let tab of tabs) {
+            if (tab.style.display !== "none" && tab.innerText.includes("civitai")) {
+                return tab.querySelector('textarea');
+            }
+        }
+        // fallback
         return document.querySelector('textarea');
     }
 
@@ -44,8 +54,14 @@
         let candidates = [];
         let selectedIdx = -1;
 
+        async function fetchCandidates(val) {
+            // タブ名でAPI切替（ここではcivitaiのみ例示）
+            const res = await fetch(`/civitai_candidates?q=${encodeURIComponent(val)}`);
+            return await res.json();
+        }
+
         function showCandidates(list) {
-            if (!list.length) {
+            if (!list || !list.length) {
                 acDiv.style.display = "none";
                 return;
             }
@@ -65,8 +81,7 @@
                 acDiv.style.display = "none";
                 return;
             }
-            const res = await fetch(`/civitai_candidates?q=${encodeURIComponent(val)}`);
-            candidates = await res.json();
+            candidates = await fetchCandidates(val);
             selectedIdx = 0;
             showCandidates(candidates);
         });
