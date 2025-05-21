@@ -81,21 +81,15 @@ script_callbacks.on_app_started(on_app_started)
 
 def create_tab(hub_name):
     with gr.Row():
-        search_word = gr.Textbox(label="Search", placeholder="Enter a keyword to search")
+        search_word = gr.Textbox(label="Search", placeholder="Enter a keyword to search", element_id="search_box")
         search_button = gr.Button("Search")
         search_result = gr.Textbox(label="Result", interactive=False)
-        if hub_name == "huggingface":
-            search_button.click(
-                lambda x: quickly_search_huggingface(x, limit=1)[0] if quickly_search_huggingface(x, limit=1) else "",
-                inputs=[search_word],
-                outputs=[search_result],
-            )
-        else:
-            search_button.click(
-                lambda x: quickly_search_civitai(x, limit=1)[0] if quickly_search_civitai(x, limit=1) else "",
-                inputs=[search_word],
-                outputs=[search_result],
-            )
+        search_fn = quickly_search_huggingface if hub_name == "huggingface" else quickly_search_civitai
+        search_button.click(
+            lambda x: search_fn(x, limit=1)[0] if search_fn(x, limit=1) else "",
+            inputs=[search_word],
+            outputs=[search_result],
+        )
 
 def on_ui_tabs():
     with gr.Blocks(analytics_enabled=False) as search_tab:
